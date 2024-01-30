@@ -11,7 +11,7 @@ from models.user import User, UserLR, Token, TokenData
 from config.db import conn
 
 user_router = APIRouter(prefix='/users', tags=['users'])
-pwd_context = CryptContext(schemes=['bcrypt'], deprecated = "auto")
+pwd_context = CryptContext(schemes=['bcrypt'], deprecated="auto")
 
 
 # For JWT
@@ -23,12 +23,15 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 def verify_password(plain_pass: str, hashed_pass: str) -> bool:
     return pwd_context.verify(plain_pass, hashed_pass)
 
+
 def get_password_hash(plain_pass: str) -> str:
     return pwd_context.hash(plain_pass)
+
 
 async def get_user(username: str) -> User | None:
     find_user = conn.blogAPI.users.find_one({"username": username})
     return find_user
+
 
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
@@ -39,7 +42,8 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
-    
+
+
 async def get_active_user(token: str) -> User | None:
     credentials_exception = HTTPException(
         status_code=401,
@@ -79,18 +83,14 @@ async def register_user(user: User):
 async def login_user(user: UserLR):
     username = user.username
     password = user.password
-    try:
-        find_user = conn.blogApp.users.find_one({"username": username})
-        if find_user is None:
-            raise HTTPException(status_code=404, detail="User not found")
-        hashed_password = find_user["password"]
-        if verify_password(password, hashed_password) == False:
-            raise HTTPException(status_code=400, detail="Incorrect password")
-        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-        access_token = create_access_token(
+    find_user = conn.blogApp.users.find_one({"username": username})
+    if find_user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    hashed_password = find_user["password"]
+    if verify_password(password, hashed_password) == False:
+        raise HTTPException(status_code=401, detail="Incorrect password")
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
-        return Token(access_token=access_token, token_type="bearer")
-    except Exception as e:
-        print("Error occurred:", e)
-    
+    return Token(access_token=access_token, token_type="bearer")

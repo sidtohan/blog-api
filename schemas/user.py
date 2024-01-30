@@ -3,5 +3,5 @@ def ConvertUser(item) -> dict:
         "_id": str(item["_id"]),
         "username": item["username"],
         "password": item["password"],
-        "photo": item["profile"]
+        "tags": item["tags"]
     }
