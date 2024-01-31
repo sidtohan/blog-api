@@ -13,7 +13,3 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     username: str | None = None
-
-class UserLR(BaseModel):
-    username: str = Field(examples = ["john_doe"])
-    password: str = Field(examples = ["john_wick"])
