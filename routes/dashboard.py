@@ -8,11 +8,9 @@ from utilities.hash import oauth2_scheme, get_active_user
 # Config
 from config.db import conn
 
-dashboard_router = APIRouter(prefix="/dashboard")
+dashboard_router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
 # Get Blogs endpoint
-
-
 @dashboard_router.get("")
 async def get_blogs_for_user(*, page: int = Query(1, description="Page number to be fetched"), 
                             limit: int = Query(5, description="Number of blogs to fetch"),
