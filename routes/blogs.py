@@ -1,8 +1,9 @@
 # Lib
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Path
+from bson.objectid import ObjectId
 
 # Models
-from models.blog import Blog
+from models.blog import Blog, BlogUpdate
 
 # Config
 from config.db import conn
@@ -39,3 +40,42 @@ async def get_blogs(page: int = Query(1, description="Page number to be retrieve
         print("Error occurred: ", e)
 
     raise HTTPException(status_code=500)
+
+# Blog by ID endpoint
+@blog_router.get("/{blog_id}")
+async def get_blog_by_id(blog_id: str = Path(description="ID of the blog to be retrieved")):
+    try:
+        retrieved_blog = conn.blogAPI.blogs.find_one({"_id": ObjectId(blog_id)})
+        retrieved_blog["id"] = str(retrieved_blog["_id"])
+        del retrieved_blog["_id"]
+        return retrieved_blog 
+    except Exception as e:
+        print("Error occurred: ", e)
+
+    raise HTTPException(status_code=500)
+
+# Update Blog endpoint
+@blog_router.put("/{blog_id}")
+async def update_blog(blog: Blog, blog_id : str = Path(description="ID of the blog to be updated")):
+    find_blog = conn.blogAPI.blogs.find_one({"_id": ObjectId(blog_id)})
+    if find_blog is None:
+        raise HTTPException(status_code=404, detail="Specified blog not found")
+    try:
+        conn.blogAPI.blogs.find_one_and_update({"_id": ObjectId(blog_id)}, {"$set": dict(blog)})
+        return {"Message": "Blog updated successfully"}
+    except Exception as e:
+        print("Error occurred: ", e)
+    
+    raise HTTPException(status_code=500)
+
+# Delete Blog endpoint
+@blog_router.delete("/{blog_id}")
+async def delete_blog(blog_id: str = Path(description="ID of the blog to be deleted")):
+    try:
+        conn.blogAPI.blogs.delete_one({'_id': ObjectId(blog_id)})
+        return {"Message": "Blog deleted successfully"}
+    except Exception as e:
+        print("Error occurred: ", e)
+    
+    raise HTTPException(status_code=500)
+
