@@ -11,4 +11,5 @@ class BlogInDb(Blog):
     by: str = Field(examples=["john_doe"], description="Username of the user who wrote the blog")
     by_id: str = Field(description="ID of the user who created this blog")
     by_photo: str = Field(None, examples=["https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg"], description="URL of the profile picture of the user")
-    likes: int = Field(0, description="Number of likes of blog")    
+    likes: int = Field(0, description="Number of likes of blog")
+    id: str = Field(description="ID of the blog")

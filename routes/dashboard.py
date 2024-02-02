@@ -1,6 +1,7 @@
 # Lib
-from fastapi import APIRouter, HTTPException, Depends, Query
+from fastapi import APIRouter, HTTPException, Depends, Path, Query
 from typing import Annotated, List
+from bson.objectid import ObjectId
 
 # Utilities
 from utilities.hash import oauth2_scheme, get_active_user
@@ -71,6 +72,8 @@ async def get_blogs_for_user(*, page: int = Query(1, description="Page number to
 
     raise HTTPException(status_code=500)
 
+
+# Get Trending Blogs endpoint
 @dashboard_router.get("/trending")
 async def get_trending_blogs(*, page: int = Query(1, description="Page number to be fetched"), 
                             limit: int = Query(5, description="Number of blogs to fetch"),
@@ -90,3 +93,25 @@ async def get_trending_blogs(*, page: int = Query(1, description="Page number to
         print("Error occurred: ", e)
 
     raise HTTPException(status_code = 500)
+
+
+# Like Blog endpoint
+@dashboard_router.put("/{blog_id}")
+async def like_blog(token: Annotated[str, Depends(oauth2_scheme)], 
+                    blog_id: str = Path(description="ID of the blog to be liked")):
+    find_blog = conn.blogAPI.blogs.find_one({"_id": ObjectId(blog_id)})
+
+    if find_blog is None:
+        raise HTTPException(status_code=404, detail="Specified blog not found")
+    
+    try:
+        updated_blog = dict(find_blog)
+        updated_blog["likes"] += 1
+        conn.blogAPI.blogs.find_one_and_update({"_id": ObjectId(blog_id)},{"$set": dict(updated_blog)})
+
+        return {"Message": "Blog liked successfully"}
+    
+    except Exception as e:
+        print("Error occurred: ", e)
+
+    raise HTTPException(status_code=500)
