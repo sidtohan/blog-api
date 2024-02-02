@@ -5,6 +5,7 @@ from bson.objectid import ObjectId
 
 # Utilities
 from utilities.hash import oauth2_scheme, get_active_user
+from utilities.mapBlog import mapBlog
 
 # Models
 from models.blog import BlogInDb
@@ -80,13 +81,30 @@ async def get_trending_blogs(*, page: int = Query(1, description="Page number to
                             token: Annotated[str, Depends(oauth2_scheme)]) -> List[BlogInDb]:
     skip = (page - 1) * limit
     try:
-        blogs_retrieved_cursor = conn.blogAPI.blogs.find({}).sort({"likes": -1}).skip(skip).limit(limit)        
+        blogs_retrieved_cursor = conn.blogAPI.blogs.aggregate([{
+            "$set": {
+                "likes": {
+                    "$size": "$liked"
+                }
+            }
+        },
+        {
+            "$sort": {
+                "likes": -1
+            }
+        }, 
+        {
+            "$skip": skip
+        },
+        {
+            "$limit": limit
+        }, 
+        {
+            "$unset": "likes"
+        }])        
         blogs_retrieved = []
         for blog in blogs_retrieved_cursor:
-            blog["id"] = str(blog["_id"])
-            blog["by_id"] = str(blog["by_id"])
-            del blog["_id"]
-            blogs_retrieved.append(blog)
+            blogs_retrieved.append(mapBlog(blog))
 
         return blogs_retrieved
     except Exception as e:
@@ -104,9 +122,13 @@ async def like_blog(token: Annotated[str, Depends(oauth2_scheme)],
     if find_blog is None:
         raise HTTPException(status_code=404, detail="Specified blog not found")
     
+    user = await get_active_user(token)
+    if user in find_blog["liked"]:
+        raise HTTPException(status_code=400, detail="You have already liked this blog")
+    
     try:
         updated_blog = dict(find_blog)
-        updated_blog["likes"] += 1
+        updated_blog["liked"].append(user["_id"])
         conn.blogAPI.blogs.find_one_and_update({"_id": ObjectId(blog_id)},{"$set": dict(updated_blog)})
 
         return {"Message": "Blog liked successfully"}

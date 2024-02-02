@@ -25,7 +25,7 @@ async def create_blog(blog: Blog, token: Annotated[str, Depends(oauth2_scheme)])
         new_blog["by"] = user["username"]
         new_blog["by_id"] = user["_id"]
         new_blog["by_photo"] = user["photo"]
-        new_blog["likes"] = 0
+        new_blog["liked"] = []
         conn.blogAPI.blogs.insert_one(new_blog)
         return {"Message": "Blog created successfully"}
     except Exception as e:

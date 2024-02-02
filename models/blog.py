@@ -1,6 +1,6 @@
 # Lib
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, List
 
 class Blog(BaseModel):
     title: str = Field(examples=["FastAPI is good"], description="Title of the blog")
@@ -11,5 +11,6 @@ class BlogInDb(Blog):
     by: str = Field(examples=["john_doe"], description="Username of the user who wrote the blog")
     by_id: str = Field(description="ID of the user who created this blog")
     by_photo: str = Field(None, examples=["https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg"], description="URL of the profile picture of the user")
-    likes: int = Field(0, description="Number of likes of blog")
+    liked: List[str] = Field([], description="List of user IDs that have liked a particular blog")
     id: str = Field(description="ID of the blog")
+    
