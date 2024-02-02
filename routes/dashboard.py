@@ -114,7 +114,7 @@ async def get_trending_blogs(*, page: int = Query(1, description="Page number to
 
 
 # Like Blog endpoint
-@dashboard_router.put("/{blog_id}")
+@dashboard_router.put("/like/{blog_id}")
 async def like_blog(token: Annotated[str, Depends(oauth2_scheme)], 
                     blog_id: str = Path(description="ID of the blog to be liked")):
     find_blog = conn.blogAPI.blogs.find_one({"_id": ObjectId(blog_id)})
@@ -123,7 +123,7 @@ async def like_blog(token: Annotated[str, Depends(oauth2_scheme)],
         raise HTTPException(status_code=404, detail="Specified blog not found")
     
     user = await get_active_user(token)
-    if user in find_blog["liked"]:
+    if user["_id"] in find_blog["liked"]:
         raise HTTPException(status_code=400, detail="You have already liked this blog")
     
     try:
@@ -132,6 +132,32 @@ async def like_blog(token: Annotated[str, Depends(oauth2_scheme)],
         conn.blogAPI.blogs.find_one_and_update({"_id": ObjectId(blog_id)},{"$set": dict(updated_blog)})
 
         return {"Message": "Blog liked successfully"}
+    
+    except Exception as e:
+        print("Error occurred: ", e)
+
+    raise HTTPException(status_code=500)
+
+
+# Unlike Blog Endpoint
+@dashboard_router.put("/unlike/{blog_id}")
+async def unlike_blog(token: Annotated[str, Depends(oauth2_scheme)], 
+                    blog_id: str = Path(description="ID of the blog to be unliked")):
+    find_blog = conn.blogAPI.blogs.find_one({"_id": ObjectId(blog_id)})
+
+    if find_blog is None:
+        raise HTTPException(status_code=404, detail="Specified blog not found")
+    
+    user = await get_active_user(token)
+    if user["_id"] not in find_blog["liked"]:
+        raise HTTPException(status_code=400, detail="You have not liked this blog")
+    
+    try:
+        updated_blog = dict(find_blog)
+        updated_blog["liked"].remove(user["_id"])
+        conn.blogAPI.blogs.find_one_and_update({"_id": ObjectId(blog_id)},{"$set": dict(updated_blog)})
+
+        return {"Message": "Blog unliked successfully"}
     
     except Exception as e:
         print("Error occurred: ", e)
