@@ -1,5 +1,10 @@
+# Dotenv
+from dotenv import dotenv_values
+
+# Pymongo
 from pymongo import MongoClient
-MONGO_URI = "mongodb+srv://sidtohan:sidd1234@cluster0.lo4whtw.mongodb.net/?retryWrites=true&w=majority"
+config = dotenv_values(".env")
+MONGO_URI = config["MONGODB_URI"]
 
 conn = MongoClient(MONGO_URI)
 

@@ -10,3 +10,4 @@ class Blog(BaseModel):
 class BlogInDb(Blog):
     by: str = Field(examples=["john_doe"], description="Username of the user who wrote the blog")
     by_id: str = Field(description="ID of the user who created this blog")
+    by_photo: str = Field(None, description="URL of the profile picture of the user")
