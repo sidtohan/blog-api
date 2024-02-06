@@ -7,7 +7,6 @@ class User(BaseModel):
     password: str = Field(examples = ["john_wick"], description="Password of the account")
     tags: Optional[list] = Field([], examples = [["coding", "gaming"]], description="List of tags user is interested in")
     photo: Optional[str] = Field(None, examples=["https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg"])
-    id: str = Field(description="ID of the user")
     
 class Token(BaseModel):
     access_token: str
