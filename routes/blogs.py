@@ -2,6 +2,7 @@
 from fastapi import APIRouter, HTTPException, Query, Path, Depends
 from bson.objectid import ObjectId
 from typing import Annotated, List
+import datetime
 
 # Models
 from models.blog import Blog, BlogInDb
@@ -26,6 +27,7 @@ async def create_blog(blog: Blog, token: Annotated[str, Depends(oauth2_scheme)])
         new_blog["by_id"] = user["_id"]
         new_blog["by_photo"] = user["photo"]
         new_blog["liked"] = []
+        new_blog["date"] = datetime.datetime.now()
         conn.blogAPI.blogs.insert_one(new_blog)
         return {"Message": "Blog created successfully"}
     except Exception as e:

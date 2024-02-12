@@ -47,7 +47,7 @@ async def login_user(username: Annotated[str, Form()], password: Annotated[str, 
         access_token = create_access_token(
             data={"sub": username}, expires_delta=access_token_expires
         )
-        return Token(access_token=access_token, token_type="bearer")
+        return Token(access_token=access_token, token_type="bearer", user_id=str(find_user["_id"]))
     except Exception as e:
         print("Error occurred: ", e)
     raise HTTPException(status_code=500)
@@ -66,7 +66,7 @@ async def update_user(user: User, token: Annotated[str, Depends(oauth2_scheme)])
 
     # Updation possible only if user is logged in
     token_user = await get_active_user(token)
-    if token_user["username"] != username or verify_password(password, token_user["password"]) == False:
+    if token_user["_id"] != find_user["_id"] or verify_password(password, token_user["password"]) == False:
         raise HTTPException(status_code=401)
 
     # Update user now
